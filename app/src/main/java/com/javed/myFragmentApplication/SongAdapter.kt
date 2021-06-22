@@ -1,12 +1,18 @@
 package com.javed.myFragmentApplication
 
+import android.graphics.Color
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.Toast
 import androidx.recyclerview.widget.RecyclerView
 import kotlinx.android.synthetic.main.song.view.*
 
-class SongAdapter(var songsList: ArrayList<Songs>) :
+class SongAdapter(
+    private var songsList: ArrayList<Songs>,
+    private var callback: SongAdapterInterface
+) :
     RecyclerView.Adapter<SongAdapter.ViewHolder>() {
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
@@ -20,12 +26,20 @@ class SongAdapter(var songsList: ArrayList<Songs>) :
 
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
         holder.bind(songsList[position])
+
     }
 
-    class ViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
+    inner class ViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         fun bind(songs: Songs) {
-            itemView.txt_song_name.text = songs.songName
-            itemView.txt_artist_name.text = songs.artistName
+            itemView.txt_song_name_video_fragment.text = songs.songName
+            itemView.txt_artist_name_video_fragment.text = songs.artistName
+
+            itemView.cl_song.setOnClickListener {
+                callback.onItemClick(songs.songName, songs.artistName,songs.track,layoutPosition)
+                itemView.setBackgroundColor(Color.DKGRAY)
+//                Toast.makeText(getActivity(), "", Toast.LENGTH_SHORT).show()
+                Log.d("DataTransfer", "in adapter onclick $songs.songName")
+            }
 
         }
     }

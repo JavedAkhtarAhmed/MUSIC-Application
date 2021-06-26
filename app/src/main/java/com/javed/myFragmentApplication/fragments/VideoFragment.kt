@@ -17,7 +17,7 @@ import me.tankery.lib.circularseekbar.CircularSeekBar
 
 class VideoFragment() : Fragment() {
     private var videoCallBack: VideoFragmentToBaseCommunicator? = null
-
+    var i = 0
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
@@ -39,7 +39,6 @@ class VideoFragment() : Fragment() {
         }
 
         seek(totalTime)
-        var i = 0
         lifecycleScope.launch(Dispatchers.Default) {
             totalTime?.let {
                 while (i <= totalTime) {
@@ -51,6 +50,7 @@ class VideoFragment() : Fragment() {
                             }
                         val remainingTime = totalTime - i
                         txtRemainingTime.text = createTimeLabel(remainingTime).toString()
+                        circularSeekBar.progress=i.toFloat()
                     }
                     delay(1000)
                 }
@@ -75,7 +75,6 @@ class VideoFragment() : Fragment() {
                     if (fromUser) {
                         videoCallBack?.getSeekBarProgressChange(progress)
                     }
-
                 }
 
                 override fun onStopTrackingTouch(seekBar: CircularSeekBar?) {

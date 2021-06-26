@@ -2,20 +2,22 @@ package com.javed.myFragmentApplication
 
 import android.media.MediaPlayer
 import android.os.Bundle
-import android.util.Log
-import android.view.WindowManager
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.res.ResourcesCompat
+import com.javed.myFragmentApplication.communicators.MainActivityCommunicator
+import com.javed.myFragmentApplication.communicators.VideoFragmentToBaseCommunicator
+import com.javed.myFragmentApplication.fragments.HomeFragment
+import com.javed.myFragmentApplication.fragments.SearchFragment
+import com.javed.myFragmentApplication.fragments.SettingFragment
+import com.javed.myFragmentApplication.fragments.VideoFragment
 import kotlinx.android.synthetic.main.activity_main.*
 
-class MainActivity : AppCompatActivity(), MainActivityCommunicator {
+class MainActivity : AppCompatActivity(), MainActivityCommunicator,
+    VideoFragmentToBaseCommunicator {
     private var selectedIcon = home
     private var mp: MediaPlayer? = null
-    private var totalTime: Int? = 0
-    private var oldPosition: Int? = null
-    private var oldMp: MediaPlayer? = null
-
+    private var selectedSong: Songs? = null
 
     companion object {
         const val home = "Home"
@@ -27,24 +29,21 @@ class MainActivity : AppCompatActivity(), MainActivityCommunicator {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
-        getWindow().setFlags(
-            WindowManager.LayoutParams.FLAG_FULLSCREEN,
-            WindowManager.LayoutParams.FLAG_FULLSCREEN
-        )
-        btnMid.setOnClickListener {
-            if (oldPosition == null) {
-                Toast.makeText(this, "select a song", Toast.LENGTH_SHORT).show()
-            } else {
-                playBtnClick()
-            }
-        }
-
 
         initHome()
+
         btnHome.setOnClickListener {
             unselectPrevTab()
             initHome()
             selectedIcon = home
+        }
+
+        btnMid.setOnClickListener {
+            if (mp == null) {
+                Toast.makeText(this, "select a song", Toast.LENGTH_SHORT).show()
+            } else {
+                playBtnClick()
+            }
         }
 
         btnSearch.setOnClickListener {
@@ -52,70 +51,46 @@ class MainActivity : AppCompatActivity(), MainActivityCommunicator {
         }
 
         btnVideo.setOnClickListener {
-            selectVideo(null)
+
+            selectVideo(getSongBundle())
         }
 
         btnSetting.setOnClickListener {
-            fragmentSetting(SettingFragment())
-            unselectPrevTab()
-            btnSetting.setImageDrawable(
-                ResourcesCompat.getDrawable(
-                    resources,
-                    R.drawable.ic_notification_selected,
-                    null
-                )
-            )
-            selectedIcon = setting
+            selectSetting()
         }
     }
 
-    private fun playTrack(position: Int?) {
+    private fun playTrack(track: Int) {
+        if (mp?.isPlaying == true) {
+            mp?.release()
+        }
+
+        mp = MediaPlayer.create(this, track)
+        mp?.start()
         mp?.isLooping = true
         mp?.setVolume(5f, 5f)
-        totalTime = mp?.duration
-        oldPosition = position
 
-
-    }
-
-    private fun checkPosition(position: Int?) {
-        if (oldPosition == position) {
-            playBtnClick()
-        } else {
-            if (oldMp == null) {
-                mp?.start()
-                oldMp = mp
-                oldPosition = position
-                btnMid.setBackgroundResource(R.drawable.ic_pause)
-            } else {
-//            start
-                oldMp?.stop()
-                mp?.start()
-                oldMp = mp
-                oldPosition = position
-                btnMid.setBackgroundResource(R.drawable.ic_pause)
-            }
-        }
-
+        btnMid.setBackgroundResource(R.drawable.ic_pause)
     }
 
     private fun playBtnClick() {
-        if (mp!!.isPlaying) {
-//            Stop
+        if (mp?.isPlaying == true) {
+            // Stop
             mp?.pause()
+
             btnMid.setBackgroundResource(R.drawable.ic_play)
         } else {
-//            start
+            // start
             mp?.start()
+
             btnMid.setBackgroundResource(R.drawable.ic_pause)
         }
-
     }
-
 
     private fun selectVideo(data: Bundle?) {
         fragmentVideo(VideoFragment(), data)
         unselectPrevTab()
+
         btnVideo.setImageDrawable(
             ResourcesCompat.getDrawable(
                 resources,
@@ -123,12 +98,14 @@ class MainActivity : AppCompatActivity(), MainActivityCommunicator {
                 null
             )
         )
+
         selectedIcon = video
     }
 
     private fun selectSearch() {
         fragmentSearch(SearchFragment())
         unselectPrevTab()
+
         btnSearch.setImageDrawable(
             ResourcesCompat.getDrawable(
                 resources,
@@ -136,7 +113,23 @@ class MainActivity : AppCompatActivity(), MainActivityCommunicator {
                 null
             )
         )
+
         selectedIcon = search
+    }
+
+    private fun selectSetting() {
+        fragmentSetting(SettingFragment())
+        unselectPrevTab()
+
+        btnSetting.setImageDrawable(
+            ResourcesCompat.getDrawable(
+                resources,
+                R.drawable.ic_notification_selected,
+                null
+            )
+        )
+
+        selectedIcon = setting
     }
 
 
@@ -167,7 +160,6 @@ class MainActivity : AppCompatActivity(), MainActivityCommunicator {
         ft.commit()
     }
 
-
     private fun unselectPrevTab() {
         when (selectedIcon) {
             home -> {
@@ -179,6 +171,7 @@ class MainActivity : AppCompatActivity(), MainActivityCommunicator {
                     )
                 )
             }
+
             search -> {
                 btnSearch.setImageDrawable(
                     ResourcesCompat.getDrawable(
@@ -187,8 +180,8 @@ class MainActivity : AppCompatActivity(), MainActivityCommunicator {
                         null
                     )
                 )
-
             }
+
             video -> {
                 btnVideo.setImageDrawable(
                     ResourcesCompat.getDrawable(
@@ -207,7 +200,6 @@ class MainActivity : AppCompatActivity(), MainActivityCommunicator {
                         null
                     )
                 )
-
             }
         }
     }
@@ -223,18 +215,29 @@ class MainActivity : AppCompatActivity(), MainActivityCommunicator {
         )
     }
 
-    override fun getData(song: String?, artist: String?, track: MediaPlayer?, pos: Int) {
-        Log.d("DataTransfer", "in mainactivity  $track")
-        mp = track
-        val bundle = Bundle().apply {
-            putString("SongName", song)
-            putString("ArtistName", artist)
-
-        }
-        checkPosition(pos)
-        selectVideo(bundle)
-
+    override fun getData(songs: Songs) {
+        selectedSong = songs
+        playTrack(songs.track)
+        selectVideo(getSongBundle())
     }
 
+    override fun getSeekBarProgressChange(progress: Float) {
+        mp?.seekTo(progress.toInt())
+    }
 
+    fun getCurrentPosition(): Int? {
+        return mp?.currentPosition
+    }
+
+    private fun getSongBundle(): Bundle {
+        return Bundle().apply {
+            putString("SongName", selectedSong?.songName)
+            putString("ArtistName", selectedSong?.artistName)
+            mp?.duration?.let { putInt("TotalTime", it) }
+        }
+    }
 }
+
+
+
+

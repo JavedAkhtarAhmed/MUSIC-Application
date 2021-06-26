@@ -1,10 +1,11 @@
-package com.javed.myFragmentApplication
+package com.javed.myFragmentApplication.fragments
 
 import android.os.Bundle
 import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import com.javed.myFragmentApplication.R
 
 
 class SearchFragment : Fragment() {

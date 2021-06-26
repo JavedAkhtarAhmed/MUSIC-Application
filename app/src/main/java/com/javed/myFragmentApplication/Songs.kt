@@ -6,5 +6,5 @@ import android.provider.MediaStore
 data class Songs(
     var songName: String,
     var artistName : String,
-    var track : MediaPlayer
+    var track : Int
 )

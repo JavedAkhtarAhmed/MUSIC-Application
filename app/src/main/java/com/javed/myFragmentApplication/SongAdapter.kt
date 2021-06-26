@@ -5,8 +5,8 @@ import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.Toast
 import androidx.recyclerview.widget.RecyclerView
+import com.javed.myFragmentApplication.communicators.SongAdapterInterface
 import kotlinx.android.synthetic.main.song.view.*
 
 class SongAdapter(
@@ -35,7 +35,7 @@ class SongAdapter(
             itemView.txt_artist_name_video_fragment.text = songs.artistName
 
             itemView.cl_song.setOnClickListener {
-                callback.onItemClick(songs.songName, songs.artistName,songs.track,layoutPosition)
+                callback.onItemClick(songs)
                 itemView.setBackgroundColor(Color.DKGRAY)
 //                Toast.makeText(getActivity(), "", Toast.LENGTH_SHORT).show()
                 Log.d("DataTransfer", "in adapter onclick $songs.songName")
